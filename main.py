@@ -143,6 +143,44 @@ def run_track():
     print_tracking_report(df)
 
 
+def run_bloomberg(start_date: str = "2000-01-01"):
+    """
+    Pull all Bloomberg data and save to data/raw/ as CSVs.
+
+    Run this once on the machine with the Bloomberg Terminal connected.
+    The saved CSVs are then committed/copied back and used by the pipeline
+    without needing a live terminal.
+
+    Usage:
+        python main.py bloomberg
+        python main.py bloomberg 2010-01-01   # custom start date
+    """
+    from src.data.bloomberg_loader import BloombergLoader, enhance_fred_data
+
+    print(f"Connecting to Bloomberg Terminal (localhost:8194)...")
+    with BloombergLoader() as bbg:
+
+        print("  Pulling rates data (BGCR, MOVE, swap rates)...")
+        bbg_rates = bbg.load_rates_data(start_date=start_date)
+        print(f"  Saved {len(bbg_rates)} rows → data/raw/bloomberg_rates.csv")
+
+        print("  Pulling Treasury futures prices + open interest...")
+        bbg_oi = bbg.load_futures_oi(start_date=start_date)
+        print(f"  Saved {len(bbg_oi)} rows → data/raw/futures_oi.csv")
+
+        print("  Pulling SOFR OIS curve (Fed path pricing)...")
+        bbg_ois = bbg.load_sofr_ois_path()
+        print(f"  Saved {len(bbg_ois)} rows → data/raw/sofr_ois.csv")
+
+    print("\nBloomberg pull complete. Merging with FRED data...")
+    loader = DataLoader(FRED_KEY)
+    fred_df = loader.load_treasury_data()
+    enhanced = enhance_fred_data(fred_df, bbg_rates)
+    enhanced.to_csv("data/raw/treasury_data_enhanced.csv")
+    print(f"  Saved {len(enhanced)} rows → data/raw/treasury_data_enhanced.csv")
+    print("\nDone. Commit data/raw/ or copy CSVs back to your main machine.")
+
+
 def run_dashboard():
     from src.dashboard.app import app
     print("Launching dashboard at http://localhost:8050")
@@ -151,7 +189,10 @@ def run_dashboard():
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else None
-    if cmd == "dashboard":
+    if cmd == "bloomberg":
+        start = sys.argv[2] if len(sys.argv) > 2 else "2000-01-01"
+        run_bloomberg(start_date=start)
+    elif cmd == "dashboard":
         run_dashboard()
     elif cmd == "report":
         run_report()
