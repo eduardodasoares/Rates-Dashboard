@@ -1,0 +1,24 @@
+# ── Core data & numerics ──────────────────────────────────────────────────
+pandas>=2.0
+numpy>=1.24
+scipy>=1.11
+fredapi>=0.5
+
+# ── Dashboard ─────────────────────────────────────────────────────────────
+dash>=2.14
+dash-bootstrap-components>=1.5
+plotly>=5.18
+
+# ── Notebooks ─────────────────────────────────────────────────────────────
+jupyter>=1.0
+ipykernel>=6.0
+
+# ── COT data loader (free CFTC data) ──────────────────────────────────────
+requests>=2.31
+
+# ── Bloomberg integration ─────────────────────────────────────────────────
+# blpapi must be installed from the Bloomberg terminal, not PyPI.
+# On the Bloomberg machine, run:
+#   pip install --index-url=https://blpapi.bloomberg.com/repository/releases/python/simple blpapi
+# or copy the wheel from: C:\blp\DAPI\APIv3\Python\
+# blpapi>=3.19
