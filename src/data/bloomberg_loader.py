@@ -340,8 +340,9 @@ class BloombergLoader:
         for name, ticker in _FUTURES_SERIES.items():
             try:
                 tmp = self.bdh(ticker, ["PX_LAST", "OPEN_INT"], start_date, end_date)
-                frames[f"{name}_px"] = tmp["PX_LAST"]
-                frames[f"{name}_oi"] = tmp["OPEN_INT"]
+                # Rename Series before concat so column names survive pd.concat
+                frames[f"{name}_px"] = tmp["PX_LAST"].rename(f"{name}_px")
+                frames[f"{name}_oi"] = tmp["OPEN_INT"].rename(f"{name}_oi")
             except Exception as exc:
                 print(f"[BloombergLoader] Warning: could not load {name} ({ticker}): {exc}")
 

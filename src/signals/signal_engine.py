@@ -941,6 +941,13 @@ class SignalEngine:
             "VIX", "VIX_z20", "VIX_mom_5d",
             "IG_OAS", "IG_OAS_z20", "IG_OAS_mom_5d",
             "HY_OAS", "HY_OAS_z20", "HY_OAS_mom_5d",
+            # MOVE index (Bloomberg — present only when bloomberg_rates.csv loaded)
+            "MOVE", "MOVE_z20", "MOVE_mom_5d",
+            "MOVE_VIX_ratio", "MOVE_VIX_ratio_z20",
+            # Swap spreads (Bloomberg — present only when bloomberg_rates.csv loaded)
+            "swap_spread_2Y",  "swap_spread_2Y_z20",
+            "swap_spread_10Y", "swap_spread_10Y_z20",
+            "swap_2s10s", "swap_2s10s_z20",
         ]
         available = [c for c in cols if c in df.columns]
         snap = df[available].iloc[[-1]].copy()

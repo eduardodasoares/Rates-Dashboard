@@ -257,4 +257,54 @@ class FeatureEngineer:
         df["fly_5s10s30s_mom_5d"]  = df["fly_5s10s30s"].diff(5)
         df["fly_5s10s30s_mom_20d"] = df["fly_5s10s30s"].diff(20)
 
+        # ═══════════════════════════════════════════════════════════════════
+        # BLOCK 11 — MOVE INDEX (Bloomberg only; skipped if column absent)
+        #
+        # MOVE = ICE BofA Merrill Lynch Option Volatility Estimate.
+        # Measures 1-month implied vol of Treasury options — the rates
+        # equivalent of VIX. Available from 1990.
+        #
+        # MOVE_VIX_ratio: when MOVE is high relative to VIX, rates markets
+        # are more stressed than equities. A ratio z-score > 0 historically
+        # coincides with forced rates selling / liquidity stress → flattening.
+        # ═══════════════════════════════════════════════════════════════════
+        if "MOVE" in df.columns:
+            df["MOVE_z20"]     = _zscore(df["MOVE"], 20)
+            df["MOVE_z60"]     = _zscore(df["MOVE"], 60)
+            df["MOVE_mom_5d"]  = df["MOVE"].diff(5)
+            df["MOVE_mom_20d"] = df["MOVE"].diff(20)
+
+            if "VIX" in df.columns:
+                df["MOVE_VIX_ratio"]     = df["MOVE"] / df["VIX"].replace(0, np.nan)
+                df["MOVE_VIX_ratio_z20"] = _zscore(df["MOVE_VIX_ratio"], 20)
+
+        # ═══════════════════════════════════════════════════════════════════
+        # BLOCK 12 — SWAP SPREADS (Bloomberg only; skipped if columns absent)
+        #
+        # Swap spread = Treasury yield − USD IRS swap rate (same maturity), bps.
+        # Computed in enhance_fred_data() and carried into df before this point.
+        #
+        # Negative swap spread = Treasuries yield MORE than swaps — unusual.
+        # Historically associated with supply pressure, balance-sheet stress,
+        # or forced Treasury selling. Tends to precede flattening as real-money
+        # buyers step in to buy cheap Treasuries.
+        #
+        # swap_2s10s: the slope of the swap curve (SW_10Y − SW_2Y).
+        # Comparing it to Treasury 2s10s reveals who is driving the curve:
+        # Treasuries cheap vs swaps at the long end → supply story.
+        # ═══════════════════════════════════════════════════════════════════
+        _swap_spreads = [c for c in
+                         ["swap_spread_2Y", "swap_spread_5Y",
+                          "swap_spread_10Y", "swap_spread_30Y"]
+                         if c in df.columns]
+
+        for col in _swap_spreads:
+            df[f"{col}_z20"] = _zscore(df[col], 20)
+            df[f"{col}_z60"] = _zscore(df[col], 60)
+            df[f"{col}_mom_5d"] = df[col].diff(5)
+
+        if "SW_10Y" in df.columns and "SW_2Y" in df.columns:
+            df["swap_2s10s"]     = df["SW_10Y"] - df["SW_2Y"]
+            df["swap_2s10s_z20"] = _zscore(df["swap_2s10s"], 20)
+
         return df
